@@ -1,0 +1,257 @@
+
+# ============================================================
+#  Commandes curl de test - API Aux Claviers Citoyens
+#  Organisation : par fichier REST + par CRUD
+#
+#  SYNTAXE PowerShell :
+#    curl -Method  -> Invoke-WebRequest (natif PS, Body en guillemets simples)
+#    curl.exe      -> vrai curl, utiliser --% pour bloquer l'interpretation PS
+#                     ex: curl.exe --% -d "{\"email\":\"x\"}"
+#
+#  ETAPE 0 : s'assurer que l'utilisateur existe (register),
+#            puis recuperer le token (login)
+# ============================================================
+
+
+# ------------------------------------------------------------
+# ETAPE 0 : Creer l'utilisateur toto (si pas encore fait)
+# ------------------------------------------------------------
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/auth/register" -H "Content-Type: application/json" -d "{\"name\":\"Toto\",\"email\":\"toto@net.fr\",\"password\":\"toto\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/auth/register" -ContentType "application/json" -Body '{"name":"Toto","email":"toto@net.fr","password":"toto"}'
+
+
+# ------------------------------------------------------------
+# ETAPE 1 : Login -> obtenir le token JWT
+# ------------------------------------------------------------
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/auth/token" -H "Content-Type: application/json" -d "{\"email\":\"toto@net.fr\",\"password\":\"toto\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/auth/token" -ContentType "application/json" -Body '{"email":"toto@net.fr","password":"toto"}'
+
+
+# Coller le token obtenu ici :
+$token = "COLLER_LE_TOKEN_ICI"
+
+$headers = @{
+    Authorization  = "Bearer $token"
+    'Content-Type' = 'application/json'
+}
+
+
+# ============================================================
+#  token.php / register.php / me.php  --  Authentification
+# ============================================================
+
+# --- CREATE : inscription ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/auth/register" -H "Content-Type: application/json" -d "{\"name\":\"Nouveau\",\"email\":\"nouveau@test.fr\",\"password\":\"pass123\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/auth/register" -ContentType "application/json" -Body '{"name":"Nouveau","email":"nouveau@test.fr","password":"pass123"}'
+
+# --- CREATE : connexion (token) ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/auth/token" -H "Content-Type: application/json" -d "{\"email\":\"toto@net.fr\",\"password\":\"toto\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/auth/token" -ContentType "application/json" -Body '{"email":"toto@net.fr","password":"toto"}'
+
+# --- READ : utilisateur connecte ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/auth/me" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/auth/me" -Headers @{ Authorization = "Bearer $token" }
+
+
+# ============================================================
+#  rest_user.php  --  Utilisateurs
+#  Note : ID via ?id=X  (ex: /users?id=1)
+# ============================================================
+
+# --- CREATE ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/users" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Jean Dupont\",\"email\":\"jean@test.fr\",\"password\":\"pass123\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/users" -Headers $headers -Body '{"name":"Jean Dupont","email":"jean@test.fr","password":"pass123"}'
+
+# --- READ : tous ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/users" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/users" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : un specifique ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- UPDATE : infos ---
+
+curl.exe --% -X PUT "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Jean Modifie\",\"email\":\"jean@test.fr\"}"
+
+curl -Method PUT -Uri "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -Headers $headers -Body '{"name":"Jean Modifie","email":"jean@test.fr"}'
+
+# --- UPDATE : mot de passe ---
+
+curl.exe --% -X PUT "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"password\":\"nouveaupass\"}"
+
+curl -Method PUT -Uri "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -Headers $headers -Body '{"password":"nouveaupass"}'
+
+# --- DELETE ---
+
+curl.exe -X DELETE "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -H "Authorization: Bearer $token"
+
+curl -Method DELETE -Uri "http://localhost/Aux-Claviers-Citoyens/API/users?id=1" -Headers @{ Authorization = "Bearer $token" }
+
+
+# ============================================================
+#  rest_tournament.php  --  Tournois
+# ============================================================
+
+# --- CREATE ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/tournaments" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Tournoi 1\",\"game\":\"Game 1\",\"teamcount\":4}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments" -Headers $headers -Body '{"name":"Tournoi 1","game":"Game 1","teamcount":4}'
+
+# --- READ : tous ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : un specifique ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- UPDATE ---
+
+curl.exe --% -X PUT "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Tournoi 1 Modifie\",\"game\":\"Game 1\",\"status\":\"En cours\"}"
+
+curl -Method PUT -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1" -Headers $headers -Body '{"name":"Tournoi 1 Modifie","game":"Game 1","status":"En cours"}'
+
+# --- DELETE ---
+
+curl.exe -X DELETE "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1" -H "Authorization: Bearer $token"
+
+curl -Method DELETE -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1" -Headers @{ Authorization = "Bearer $token" }
+
+
+# ============================================================
+#  rest_team.php  --  Equipes
+# ============================================================
+
+# --- CREATE ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Team Alpha\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams" -Headers $headers -Body '{"name":"Team Alpha"}'
+
+# --- READ : toutes ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : une specifique ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams/1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams/1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- UPDATE ---
+
+curl.exe --% -X PUT "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams/1" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Team Alpha Modifiee\"}"
+
+curl -Method PUT -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams/1" -Headers $headers -Body '{"name":"Team Alpha Modifiee"}'
+
+# --- DELETE ---
+
+curl.exe -X DELETE "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams/1" -H "Authorization: Bearer $token"
+
+curl -Method DELETE -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/teams/1" -Headers @{ Authorization = "Bearer $token" }
+
+
+# ============================================================
+#  rest_round.php  --  Rounds
+# ============================================================
+
+# --- CREATE ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Quarts de finale\"}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds" -Headers $headers -Body '{"name":"Quarts de finale"}'
+
+# --- READ : tous (via tournoi) ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : un specifique (via tournoi) ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds/1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds/1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : un specifique (route directe) ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/rounds/1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/rounds/1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- UPDATE ---
+
+curl.exe --% -X PUT "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds/1" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"name\":\"Demi-finale\"}"
+
+curl -Method PUT -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds/1" -Headers $headers -Body '{"name":"Demi-finale"}'
+
+# --- DELETE ---
+
+curl.exe -X DELETE "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds/1" -H "Authorization: Bearer $token"
+
+curl -Method DELETE -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/rounds/1" -Headers @{ Authorization = "Bearer $token" }
+
+
+# ============================================================
+#  rest_match.php  --  Matchs
+# ============================================================
+
+# --- CREATE ---
+
+curl.exe --% -X POST "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"team1_id\":1,\"team2_id\":2,\"idR\":1}"
+
+curl -Method POST -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches" -Headers $headers -Body '{"team1_id":1,"team2_id":2,"idR":1}'
+
+# --- READ : tous (via tournoi) ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : un specifique (via tournoi) ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches/1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches/1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- READ : un specifique (route directe) ---
+
+curl.exe -X GET "http://localhost/Aux-Claviers-Citoyens/API/match/1" -H "Authorization: Bearer $token"
+
+curl -Method GET -Uri "http://localhost/Aux-Claviers-Citoyens/API/match/1" -Headers @{ Authorization = "Bearer $token" }
+
+# --- UPDATE : score d'une equipe ---
+
+curl.exe --% -X PUT "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches/1/point" -H "Authorization: Bearer %token%" -H "Content-Type: application/json" -d "{\"teamId\":1,\"teamPoint\":3}"
+
+curl -Method PUT -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches/1/point" -Headers $headers -Body '{"teamId":1,"teamPoint":3}'
+
+# --- DELETE ---
+
+curl.exe -X DELETE "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches/1" -H "Authorization: Bearer $token"
+
+curl -Method DELETE -Uri "http://localhost/Aux-Claviers-Citoyens/API/tournaments/1/matches/1" -Headers @{ Authorization = "Bearer $token" }
