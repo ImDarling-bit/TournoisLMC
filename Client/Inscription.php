@@ -68,7 +68,7 @@
                             <input class="form-control" placeholder="Email" type="email" id="email" required>
                         </div>
                         <div class="form-group mb-4">
-                            <input class="form-control" placeholder="Mot de passe" type="password" id="pass" required>
+                            <input class="form-control" placeholder="Mot de passe" type="password" id="password" required>
                         </div>
                         <button type="submit" class="btn btn-success btn-block font-weight-bold">S'inscrire</button>
                     </form>
@@ -86,15 +86,16 @@
     <script>
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            // CORRECTION : On envoie "password" au lieu de "pass" à l'API
             const data = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
-                pass: document.getElementById('pass').value
+                password: document.getElementById('password').value
             };
 
             try {
-                // Utilisation de la nouvelle route du routeur API
-                const res = await fetch('../API/auth/register', {
+                const res = await fetch('../API/register.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -108,7 +109,7 @@
                     document.getElementById('alert-box').innerHTML = '<div class="alert alert-success">Succès ! Redirection...</div>';
                     setTimeout(() => window.location.href = 'Connexion.php', 1500);
                 } else {
-                    document.getElementById('alert-box').innerHTML = `<div class="alert alert-danger">${json.error || 'Erreur lors de l\'inscription'}</div>`;
+                    document.getElementById('alert-box').innerHTML = `<div class="alert alert-danger">${json.error_description || 'Erreur lors de l\'inscription'}</div>`;
                 }
             } catch (err) {
                 console.error(err);
