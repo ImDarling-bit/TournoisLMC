@@ -232,7 +232,7 @@
             };
 
             // 1. Charger les TOURNOIS
-            fetch('../API/tournaments', {
+            fetch(`${API_BASE_URL}/tournaments`, {
                     headers: headers
                 })
                 .then(res => {
@@ -292,7 +292,7 @@
                 });
 
             // 2. Charger les UTILISATEURS (Joueurs inscrits)
-            fetch('../API/users', {
+            fetch(`${API_BASE_URL}/users`, {
                     headers: headers
                 })
                 .then(res => res.json())
@@ -304,13 +304,14 @@
                 .catch(err => console.error("Erreur utilisateurs:", err));
 
             // 3. Charger les ÉQUIPES (Équipes actives)
-            fetch('../API/teams', {
+            fetch(`${API_BASE_URL}/teams`, {
                     headers: headers
                 })
                 .then(res => res.json())
                 .then(data => {
+                    const teams = Array.isArray(data) ? data : (data.data ?? []);
                     if (!data.error) {
-                        animateValue("count-teams", 0, data.length || 0, 1000);
+                        animateValue("count-teams", 0, teams.length || 0, 1000);
                     }
                 })
                 .catch(err => console.error("Erreur équipes:", err));

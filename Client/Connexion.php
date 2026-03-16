@@ -9,7 +9,6 @@
     <link type="text/css" href="assets/css/argon.css" rel="stylesheet">
     <link type="text/css" href="assets/css/style.css" rel="stylesheet">
     <style>
-        /* Même style que Inscription */
         body {
             background: linear-gradient(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.55)), url('assets/img/Image_fond.png');
             background-size: cover;
@@ -68,7 +67,6 @@
 </head>
 
 <body>
-
     <?php include 'navbar.php'; ?>
 
     <div class="container">
@@ -76,38 +74,20 @@
             <div class="col-lg-5 col-md-7">
                 <div class="auth-card">
                     <h2 class="auth-title">Connexion</h2>
-
                     <div id="alert-container"></div>
-
                     <form id="loginForm">
                         <div class="form-group mb-3">
-                            <div class="input-group input-group-merge input-group-alternative">
-                                <input class="form-control" placeholder="Email" type="email" id="email" required>
-                            </div>
+                            <input class="form-control" placeholder="Email" type="email" id="email" required>
                         </div>
                         <div class="form-group">
-                            <div class="input-group input-group-merge input-group-alternative">
-                                <input class="form-control" placeholder="Mot de passe" type="password" id="pass" required>
-                            </div>
+                            <input class="form-control" placeholder="Mot de passe" type="password" id="pass" required>
                         </div>
-
-                        <div class="custom-control custom-control-alternative custom-checkbox">
-                            <input class="custom-control-input" id=" customCheckLogin" type="checkbox">
-                            <label class="custom-control-label" for=" customCheckLogin">
-                                <span class="text-muted">Se souvenir de moi</span>
-                            </label>
-                        </div>
-
                         <div class="text-center">
                             <button type="submit" class="btn btn-auth">Se connecter</button>
                         </div>
                     </form>
-
                     <div class="row mt-3">
-                        <div class="col-6">
-                            <a href="#" class="text-light"><small>Mot de passe oublié ?</small></a>
-                        </div>
-                        <div class="col-6 text-right">
+                        <div class="col-12 text-right">
                             <a href="Inscription.php" class="text-link"><small>Créer un compte</small></a>
                         </div>
                     </div>
@@ -125,7 +105,10 @@
             const password = document.getElementById('pass').value;
 
             try {
-                const response = await fetch('../API/auth/login', {
+                // Utilisation propre de la route générée par la navbar
+                console.log("Tentative de connexion vers : " + API_BASE_URL + "/auth/token");
+
+                const response = await fetch(`${API_BASE_URL}/auth/token`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -141,14 +124,13 @@
                 if (response.ok) {
                     localStorage.setItem('user_token', data.access_token);
                     localStorage.setItem('user_name', data.user_name || 'Joueur');
-
                     window.location.href = 'Profil.php';
                 } else {
                     alert(data.error_description || "Erreur de connexion : Mauvais identifiants");
                 }
             } catch (error) {
                 console.error("Erreur serveur :", error);
-                alert("Impossible de joindre le serveur.");
+                alert("Impossible de joindre le serveur. L'URL cible était : " + API_BASE_URL);
             }
         });
     </script>

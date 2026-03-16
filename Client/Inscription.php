@@ -1,3 +1,8 @@
+<?php
+$config = require __DIR__ . '/config.php';
+$api_base_url = $config['api_url'];
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -87,7 +92,6 @@
         document.getElementById('regForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // CORRECTION : On envoie "password" au lieu de "pass" à l'API
             const data = {
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
@@ -95,7 +99,7 @@
             };
 
             try {
-                const res = await fetch('../API/register.php', {
+                const res = await fetch(`${API_BASE_URL}/auth/register`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

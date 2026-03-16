@@ -122,7 +122,7 @@
                 return;
             }
 
-            fetch('../API/auth/me', {
+            fetch(`${API_BASE_URL}/auth/me`, {
                     method: 'GET',
                     headers: {
                         'Authorization': 'Bearer ' + token,

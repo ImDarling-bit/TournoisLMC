@@ -218,18 +218,20 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             // Utilisation de la nouvelle route globale /teams
-            fetch('../API/teams')
+            fetch(`${API_BASE_URL}/teams`)
                 .then(response => {
                     if (!response.ok) throw new Error("Erreur réseau");
                     return response.json();
                 })
                 .then(data => {
-                    // Si l'API renvoie une erreur ou un tableau vide
-                    if (data.error || !Array.isArray(data)) {
+                    // L'API retourne { data: [...] }
+                    const teams = Array.isArray(data) ? data : (data.data ?? []);
+                    if (data.error || !Array.isArray(teams)) {
                         throw new Error(data.error || "Format invalide");
                     }
+                    data = teams;
 
-                    // Tri manuel des équipes par points décroissants (Le JS fait le travail du ORDER BY DESC)
+                    // Tri manuel des équipes par points décroissants
                     data.sort((a, b) => b.points - a.points);
 
                     renderPodium(data);

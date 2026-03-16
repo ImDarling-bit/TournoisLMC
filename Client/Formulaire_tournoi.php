@@ -188,7 +188,7 @@
             };
 
             try {
-                const res = await fetch('../API/tournaments', {
+                const res = await fetch(`${API_BASE_URL}/tournaments`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

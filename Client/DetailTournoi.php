@@ -1,15 +1,7 @@
 <?php
-// Connexion à la base de données
-$paths = [__DIR__ . '/db.php', __DIR__ . '/../db.php', __DIR__ . '/../API/db.php', $_SERVER['DOCUMENT_ROOT'] . '/API/db.php'];
-$pdo = null;
-foreach ($paths as $path) {
-    if (file_exists($path)) {
-        require_once $path;
-        if (isset($pdo)) break;
-    }
-}
 
-if (!$pdo) die("Erreur : db.php introuvable.");
+// Connexion à la base de données (configuration centralisée)
+require_once __DIR__ . '/db.php';
 
 // Récupération des infos du tournoi
 $idT = isset($_GET['id']) ? intval($_GET['id']) : 0;

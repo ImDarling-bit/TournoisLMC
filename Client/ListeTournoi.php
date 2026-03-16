@@ -128,7 +128,7 @@
                 headers['Authorization'] = 'Bearer ' + token;
             }
 
-            fetch('../API/tournaments', {
+            fetch(`${API_BASE_URL}/tournaments`, {
                     headers: headers
                 })
                 .then(response => {

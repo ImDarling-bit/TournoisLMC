@@ -1,3 +1,9 @@
+<?php
+$config = require __DIR__ . '/config.php';
+
+$api_base_url = isset($config['api_url']) ? rtrim($config['api_url'], '/') : '../API';
+?>
+
 <style>
     .navbar-custom {
         background-color: rgba(21, 26, 33, 0.95);
@@ -28,7 +34,6 @@
         color: #58a6ff !important;
     }
 
-    /* Boutons Visiteur */
     .btn-nav-login {
         color: #f0f6fc;
         border: 1px solid #30363d;
@@ -59,7 +64,6 @@
         color: white;
     }
 
-    /* Liens Utilisateur Connecté */
     .user-profile-link {
         display: flex;
         align-items: center;
@@ -89,28 +93,27 @@
     }
 </style>
 
+<script>
+    const API_BASE_URL = "<?php echo $api_base_url; ?>";
+</script>
+
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
     <div class="container">
         <a class="navbar-brand" href="index.php">Tournois <span>LMC</span></a>
-
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapse">
             <span class="navbar-toggler-icon"></span>
         </button>
-
         <div class="collapse navbar-collapse" id="navbar-collapse">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item"><a href="index.php" class="nav-link">Accueil</a></li>
                 <li class="nav-item"><a href="ListeTournoi.php" class="nav-link">Tournois</a></li>
-                <li class="nav-item"><a href="Classement.php" class="nav-link">Classement</a></li>
+                <li class="nav-item"><a href="Leaderboard.php" class="nav-link">Classement</a></li>
             </ul>
-
             <ul class="navbar-nav align-items-center">
-
                 <div id="auth-guest" style="display: flex;" class="align-items-center">
                     <li class="nav-item"><a href="Connexion.php" class="btn btn-nav-login btn-sm">Connexion</a></li>
                     <li class="nav-item"><a href="Inscription.php" class="btn btn-nav-register btn-sm">Inscription</a></li>
                 </div>
-
                 <div id="auth-logged" style="display: none;" class="align-items-center">
                     <li class="nav-item">
                         <a href="Profil.php" class="user-profile-link">
@@ -124,7 +127,6 @@
                         </a>
                     </li>
                 </div>
-
             </ul>
         </div>
     </div>
@@ -134,24 +136,19 @@
     document.addEventListener("DOMContentLoaded", function() {
         const token = localStorage.getItem('user_token');
         const userName = localStorage.getItem('user_name');
-
         const guestBlock = document.getElementById('auth-guest');
         const loggedBlock = document.getElementById('auth-logged');
         const nameDisplay = document.getElementById('nav-username-display');
         const avatarLetter = document.getElementById('nav-avatar-letter');
 
         if (token) {
-            // Utilisateur CONNECTÉ : On force la disparition du bloc visiteur
             guestBlock.style.setProperty('display', 'none', 'important');
             loggedBlock.style.setProperty('display', 'flex', 'important');
-
-            // Affichage du Pseudo et de l'Avatar
             if (userName) {
                 nameDisplay.textContent = userName;
                 avatarLetter.textContent = userName.charAt(0).toUpperCase();
             }
         } else {
-            // Utilisateur NON CONNECTÉ
             guestBlock.style.setProperty('display', 'flex', 'important');
             loggedBlock.style.setProperty('display', 'none', 'important');
         }
@@ -161,6 +158,6 @@
         e.preventDefault();
         localStorage.removeItem('user_token');
         localStorage.removeItem('user_name');
-        window.location.href = 'index.php'; // Redirige vers l'accueil après déconnexion
+        window.location.href = 'index.php';
     }
 </script>
