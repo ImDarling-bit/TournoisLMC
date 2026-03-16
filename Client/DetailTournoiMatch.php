@@ -54,8 +54,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $p1 = (int)$_POST['team1_point'];
     $p2 = (int)$_POST['team2_point'];
 
+    // Récupérer l'ancien état du match pour comparer le vainqueur
+    $stmtOld = $pdo->prepare("SELECT team1_id, team2_id, team1_point, team2_point FROM `match` WHERE id=?");
+    $stmtOld->execute([$matchId]);
+    $oldMatch = $stmtOld->fetch(PDO::FETCH_ASSOC);
+
+    $oldWinnerId = null;
+    if ($oldMatch && $oldMatch['team1_id'] && $oldMatch['team2_id']
+        && $oldMatch['team1_point'] != $oldMatch['team2_point']
+        && ($oldMatch['team1_point'] > 0 || $oldMatch['team2_point'] > 0)) {
+        $oldWinnerId = ($oldMatch['team1_point'] > $oldMatch['team2_point'])
+            ? (int)$oldMatch['team1_id']
+            : (int)$oldMatch['team2_id'];
+    }
+
+    // Mise à jour du match
     $stmtUpdate = $pdo->prepare("UPDATE `match` SET team1_id=?, team2_id=?, team1_point=?, team2_point=? WHERE id=?");
     $stmtUpdate->execute([$t1, $t2, $p1, $p2, $matchId]);
+
+    // Déterminer le nouveau vainqueur
+    $newWinnerId = null;
+    if ($t1 && $t2 && $p1 !== $p2 && ($p1 > 0 || $p2 > 0)) {
+        $newWinnerId = ($p1 > $p2) ? $t1 : $t2;
+    }
+
+    // Mise à jour des points en temps réel
+    if ($oldWinnerId !== $newWinnerId) {
+        if ($oldWinnerId) {
+            // Retirer le point à l'ancien vainqueur (sans descendre sous 0)
+            $pdo->prepare("UPDATE team SET points = GREATEST(0, points - 1) WHERE id=?")
+                ->execute([$oldWinnerId]);
+        }
+        if ($newWinnerId) {
+            // Ajouter 1 point au nouveau vainqueur
+            $pdo->prepare("UPDATE team SET points = points + 1 WHERE id=?")
+                ->execute([$newWinnerId]);
+        }
+    }
 
     // Logique de progression vers le round suivant
     if ($t1 && $t2 && $p1 !== $p2 && ($p1 > 0 || $p2 > 0)) {

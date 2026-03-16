@@ -137,12 +137,23 @@ if (!$tournoi) {
                 <div class="col-md-8">
                     <h1 class="font-weight-800 mb-0 text-white"><?= htmlspecialchars($tournoi['name']) ?></h1>
                     <p class="text-muted mb-2"><i class="fas fa-gamepad mr-2"></i> <?= htmlspecialchars($tournoi['game']) ?></p>
-                    <div>
+                    <div class="d-flex align-items-center flex-wrap" style="gap:12px;">
                         <span class="status-dot"></span>
-                        <span style="color: #58a6ff; font-weight: bold;"><?= htmlspecialchars($tournoi['status']) ?></span>
-                        <span class="ml-3 text-muted">
+                        <span id="status-label" style="color: #58a6ff; font-weight: bold;"><?= htmlspecialchars($tournoi['status']) ?></span>
+                        <span class="text-muted">
                             <i class="fas fa-users mr-1"></i> <?= $tournoi['current_teams'] ?> / <?= $tournoi['TeamCount'] ?> Équipes
                         </span>
+                        <div class="d-flex align-items-center" style="gap:8px;">
+                            <select id="status-select" style="background:#161b22;color:#fff;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:0.85rem;outline:none;cursor:pointer;">
+                                <option value="Ouvert"   <?= $tournoi['status']==='Ouvert'   ? 'selected' : '' ?>>Ouvert</option>
+                                <option value="En cours" <?= $tournoi['status']==='En cours' ? 'selected' : '' ?>>En cours</option>
+                                <option value="Terminé"  <?= $tournoi['status']==='Terminé'  ? 'selected' : '' ?>>Terminé</option>
+                            </select>
+                            <button id="status-btn" onclick="updateStatus()" style="background:#238636;color:#fff;border:none;border-radius:6px;padding:4px 14px;font-size:0.85rem;font-weight:bold;cursor:pointer;">
+                                Appliquer
+                            </button>
+                            <span id="status-msg" style="font-size:0.8rem;"></span>
+                        </div>
                     </div>
                 </div>
 
@@ -212,6 +223,48 @@ if (!$tournoi) {
     <script src="assets/js/argon.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function updateStatus() {
+            const token = localStorage.getItem('user_token');
+            if (!token) {
+                document.getElementById('status-msg').innerHTML = '<span style="color:#f85149;">Connectez-vous d\'abord.</span>';
+                return;
+            }
+
+            const select = document.getElementById('status-select');
+            const newStatus = select.value;
+            const btn = document.getElementById('status-btn');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/tournaments/<?= $idT ?>`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        name: <?= json_encode($tournoi['name']) ?>,
+                        game: <?= json_encode($tournoi['game']) ?>,
+                        status: newStatus
+                    })
+                });
+
+                if (res.ok) {
+                    document.getElementById('status-label').textContent = newStatus;
+                    document.getElementById('status-msg').innerHTML = '<span style="color:#2ecc71;">✓ Mis à jour</span>';
+                    setTimeout(() => document.getElementById('status-msg').innerHTML = '', 2500);
+                } else {
+                    const json = await res.json();
+                    document.getElementById('status-msg').innerHTML = `<span style="color:#f85149;">${json.error || 'Erreur'}</span>`;
+                }
+            } catch (e) {
+                document.getElementById('status-msg').innerHTML = '<span style="color:#f85149;">Erreur serveur.</span>';
+            }
+
+            btn.disabled = false;
+        }
+    </script>
 </body>
 
 </html>

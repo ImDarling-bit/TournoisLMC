@@ -1,3 +1,14 @@
+<?php
+require_once __DIR__ . '/db.php';
+
+$count_tournaments = (int)$pdo->query("SELECT COUNT(*) FROM tournament")->fetchColumn();
+$count_users       = (int)$pdo->query("SELECT COUNT(*) FROM user")->fetchColumn();
+$count_teams       = (int)$pdo->query("SELECT COUNT(*) FROM team")->fetchColumn();
+
+$last_tournaments = $pdo->query(
+    "SELECT id, name, game, status FROM tournament ORDER BY id DESC LIMIT 3"
+)->fetchAll(PDO::FETCH_ASSOC);
+?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -203,10 +214,35 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody id="home-tournament-list">
-                    <tr>
-                        <td colspan="4" class="text-center py-4 text-muted">Chargement...</td>
-                    </tr>
+                <tbody>
+                    <?php if (empty($last_tournaments)): ?>
+                        <tr><td colspan="4" class="text-center py-4 text-muted">Aucun tournoi pour le moment.</td></tr>
+                    <?php else: foreach ($last_tournaments as $t):
+                        $statusColor = $t['status'] === 'Terminé' ? '#2ecc71' : ($t['status'] === 'Ouvert' ? '#f1c40f' : '#58a6ff');
+                    ?>
+                        <tr>
+                            <th scope="row">
+                                <div class="media align-items-center">
+                                    <div class="avatar rounded-circle mr-3" style="background-color:#21262d;color:#58a6ff;">
+                                        <i class="ni ni-trophy"></i>
+                                    </div>
+                                    <div class="media-body">
+                                        <span class="mb-0 text-sm font-weight-bold text-white"><?= htmlspecialchars($t['name']) ?></span>
+                                    </div>
+                                </div>
+                            </th>
+                            <td><?= htmlspecialchars($t['game']) ?></td>
+                            <td>
+                                <span class="badge badge-dot mr-4">
+                                    <i style="background-color:<?= $statusColor ?> !important;" class="bg-success"></i>
+                                    <span style="color:<?= $statusColor ?>"><?= htmlspecialchars($t['status']) ?></span>
+                                </span>
+                            </td>
+                            <td>
+                                <a href="DetailTournoi.php?id=<?= (int)$t['id'] ?>" class="btn btn-sm btn-outline-primary">Voir</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
@@ -216,123 +252,25 @@
 
     <script src="assets/js/argon.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('user_token');
-            const tbody = document.getElementById('home-tournament-list');
-
-            // Si pas de token, on ne peut pas charger les données de l'API protégée
-            if (!token) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">Veuillez vous <a href="Connexion.php" class="text-primary">connecter</a> pour voir les données.</td></tr>';
-                return;
-            }
-
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            };
-
-            // 1. Charger les TOURNOIS
-            fetch(`${API_BASE_URL}/tournaments`, {
-                    headers: headers
-                })
-                .then(res => {
-                    if (res.status === 401) throw new Error("Non autorisé");
-                    if (!res.ok) throw new Error("Erreur réseau");
-                    return res.json();
-                })
-                .then(data => {
-                    animateValue("count-tournaments", 0, data.length || 0, 1000);
-
-                    if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3">Aucun tournoi récent.</td></tr>';
-                        return;
-                    }
-
-                    // On prend les 3 derniers tournois
-                    const lastThree = data.slice(0, 3);
-                    let html = '';
-
-                    lastThree.forEach(t => {
-                        let statusColor = t.status === 'Terminé' ? '#2ecc71' : '#58a6ff';
-
-                        html += `
-                            <tr>
-                                <th scope="row">
-                                    <div class="media align-items-center">
-                                        <div class="avatar rounded-circle mr-3" style="background-color: #21262d; color: #58a6ff;">
-                                            <i class="ni ni-trophy"></i>
-                                        </div>
-                                        <div class="media-body">
-                                            <span class="mb-0 text-sm font-weight-bold text-white">${t.name}</span>
-                                        </div>
-                                    </div>
-                                </th>
-                                <td>${t.game}</td>
-                                <td>
-                                    <span class="badge badge-dot mr-4">
-                                      <i class="bg-success" style="background-color: ${statusColor} !important;"></i> 
-                                      <span class="status" style="color:${statusColor}">${t.status}</span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="DetailTournoi.php?id=${t.id}" class="btn btn-sm btn-outline-primary">Voir</a>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    tbody.innerHTML = html;
-                })
-                .catch(err => {
-                    console.error("Erreur tournois:", err);
-                    if (err.message === "Non autorisé") {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-warning">Session expirée. Veuillez vous reconnecter.</td></tr>';
-                    } else {
-                        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Impossible de charger les tournois.</td></tr>';
-                    }
-                });
-
-            // 2. Charger les UTILISATEURS (Joueurs inscrits)
-            fetch(`${API_BASE_URL}/users`, {
-                    headers: headers
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.error) {
-                        animateValue("count-users", 0, data.length || 0, 1000);
-                    }
-                })
-                .catch(err => console.error("Erreur utilisateurs:", err));
-
-            // 3. Charger les ÉQUIPES (Équipes actives)
-            fetch(`${API_BASE_URL}/teams`, {
-                    headers: headers
-                })
-                .then(res => res.json())
-                .then(data => {
-                    const teams = Array.isArray(data) ? data : (data.data ?? []);
-                    if (!data.error) {
-                        animateValue("count-teams", 0, teams.length || 0, 1000);
-                    }
-                })
-                .catch(err => console.error("Erreur équipes:", err));
-        });
-
-        // Fonction d'animation fluide des nombres
-        function animateValue(id, start, end, duration) {
-            if (!end) end = 0;
+        // Compteurs animés alimentés par PHP (visibles sans connexion)
+        function animateValue(id, end, duration) {
             const obj = document.getElementById(id);
-            if (!obj) return;
+            if (!obj || !end) return;
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
+                obj.innerHTML = Math.floor(progress * end);
+                if (progress < 1) window.requestAnimationFrame(step);
             };
             window.requestAnimationFrame(step);
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            animateValue('count-tournaments', <?= $count_tournaments ?>, 1000);
+            animateValue('count-users',       <?= $count_users ?>,       1000);
+            animateValue('count-teams',       <?= $count_teams ?>,       1000);
+        });
     </script>
 </body>
 
