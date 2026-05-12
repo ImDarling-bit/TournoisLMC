@@ -64,3 +64,36 @@ CREATE TABLE `MATCH`(
    FOREIGN KEY(team2_id) REFERENCES `TEAM`(id) ON DELETE SET NULL,
    FOREIGN KEY(idR) REFERENCES `ROUND`(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- USER DE TEST
+-- Mot de passe : "password" hashe en bcrypt
+-- Compatible PHP password_verify()
+-- ============================================================
+INSERT INTO `USER` (email, name, pass) VALUES (
+   'test@test.com',
+   'TestUser',
+   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+);
+
+-- ============================================================
+-- TRIGGER : suppression des tournois expires (> 7 jours)
+--
+-- Fonctionne sur DateDeDebut : un tournoi est considere expire
+-- si DateDeDebut remonte a plus de 7 jours.
+-- Se declenche a chaque INSERT sur TOURNAMENT (lazy cleanup).
+--
+-- Le CASCADE sur les FK supprime automatiquement
+-- les ROUND, TEAM et MATCH associes.
+-- ============================================================
+DELIMITER $$
+
+CREATE TRIGGER `trg_delete_expired_tournaments`
+BEFORE INSERT ON `TOURNAMENT`
+FOR EACH ROW
+BEGIN
+   DELETE FROM `TOURNAMENT`
+   WHERE DateDeDebut < DATE_SUB(CURDATE(), INTERVAL 7 DAY);
+END$$
+
+DELIMITER ;
